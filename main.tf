@@ -5,7 +5,7 @@ variable "dns_support" { default = true }
 variable "flow_log_traffic_type" { default = "ALL" }
 variable "pub_cidr" { type = "list" default = ["172.16.0.0/24","172.16.1.0/24","172.16.2.0/24"] }
 variable "priv_cidr" { type = "list" default = ["172.16.3.0/24","172.16.4.0/24","172.16.5.0/24"] }
-variable "flowlogrole" {}
+variable "flowlogrole" {} # Imported from the tfmod-aws-acct module
 variable "azs" { type = "list" }
 variable "key_name" {}
 variable "my_ip" { default = "" }
