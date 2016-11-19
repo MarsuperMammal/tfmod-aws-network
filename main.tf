@@ -1,15 +1,17 @@
-variable "region" {}
-variable "network_name" {}
-variable "vpc_cidr_block" { default = "172.16.0.0/21" }
+variable "azs" { type = "list" }
+variable "bastion_ami" {}
 variable "dns_support" { default = true }
 variable "flow_log_traffic_type" { default = "ALL" }
-variable "pub_cidr" { type = "list" default = ["172.16.0.0/24","172.16.1.0/24","172.16.2.0/24"] }
-variable "priv_cidr" { type = "list" default = ["172.16.3.0/24","172.16.4.0/24","172.16.5.0/24"] }
 variable "flowlogrole" {} # Imported from the tfmod-aws-acct module
-variable "azs" { type = "list" }
 variable "key_name" {}
 variable "my_ip" { default = "" }
-variable "bastion_ami" {}
+variable "network_name" {}
+variable "priv_subnet_num" {}
+variable "pub_subnet_num" {}
+variable "region" {}
+variable "subnet_bit" {}
+variable "vpc_cidr_block" {}
+variable "tags" { default = "" }
 
 resource "aws_vpc" "vpc" {
   cidr_block = "${var.vpc_cidr_block}"
@@ -40,32 +42,32 @@ resource "aws_vpc_endpoint" "s3e" {
 }
 
 resource "aws_subnet" "pub" {
-  count = "${length(var.pub_cidr)}"
+  count = "${var.pub_subnet_num}"
   vpc_id = "${aws_vpc.vpc.id}"
   availability_zone = "${var.azs[count.index]}"
-  cidr_block =  "${var.pub_cidr[count.index]}"
+  cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
   tags = {
     name = "${var.network_name}-pub${count.index}"
   }
 }
 
 resource "aws_subnet" "priv" {
-  count = "${length(var.priv_cidr)}"
+  count = "${length(var.priv_subnet_num)}"
   vpc_id = "${aws_vpc.vpc.id}"
   availability_zone = "${var.azs[count.index]}"
-  cidr_block =  "${var.priv_cidr[count.index]}"
+  cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index+var.pub_subnet_num)}"
   tags = {
     name = "${var.network_name}-priv${count.index}"
   }
 }
 
 resource "aws_eip" "nat_gateway" {
-  count = "${length(var.pub_cidr)}"
+  count = "${var.pub_subnet_num}"
   vpc = true
 }
 
 resource "aws_nat_gateway" "gateway" {
-  count = "${length(var.pub_cidr)}"
+  count = "${var.pub_subnet_num}"
   allocation_id = "${aws_eip.nat_gateway.*.id[count.index]}"
   subnet_id = "${aws_subnet.pub.*.id[count.index]}"
 }
@@ -79,7 +81,7 @@ resource "aws_route_table" "pub" {
 }
 
 resource "aws_route_table" "priv" {
-  count = "${length(var.priv_cidr)}"
+  count = "${var.priv_subnet_num}"
   vpc_id = "${aws_vpc.vpc.id}"
   route {
     cidr_block = "0.0.0.0/0"
@@ -88,13 +90,13 @@ resource "aws_route_table" "priv" {
 }
 
 resource "aws_route_table_association" "pub" {
-  count = "${length(var.pub_cidr)}"
+  count = "${var.pub_subnet_num}"
   subnet_id = "${aws_subnet.pub.*.id[count.index]}"
   route_table_id = "${aws_route_table.pub.id}"
 }
 
 resource "aws_route_table_association" "priv" {
-  count = "${length(var.priv_cidr)}"
+  count = "${var.priv_subnet_num}"
   subnet_id = "${aws_subnet.priv.*.id[count.index]}"
   route_table_id = "${aws_route_table.priv.*.id[count.index]}"
 }
