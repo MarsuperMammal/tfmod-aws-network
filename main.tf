@@ -46,9 +46,7 @@ resource "aws_subnet" "pub" {
   vpc_id = "${aws_vpc.vpc.id}"
   availability_zone = "${var.azs[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
-  tags = {
-    name = "${var.network_name}-pub${count.index}"
-  }
+  tags = "${merge(var.tags, map("Name", join(var.network_name,"-pub-", count.index))}"
 }
 
 resource "aws_subnet" "priv" {
@@ -56,8 +54,7 @@ resource "aws_subnet" "priv" {
   vpc_id = "${aws_vpc.vpc.id}"
   availability_zone = "${var.azs[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index+var.pub_subnet_num)}"
-  tags = {
-    name = "${var.network_name}-priv${count.index}"
+  tags =  "${merge(var.tags, map("Name", join(var.network_name,"-priv-",count.index))}"
   }
 }
 
@@ -202,9 +199,7 @@ resource "aws_network_acl" "guardrail" {
     to_port = 0
   }
 
-  tags {
-    Name = "${var.network_name}-GuardrailNacl"
-  }
+  tags = "${merge(var.tags, map("Name", join(var.network_name,"-GuardrailNacl"))}"
 }
 
 resource "aws_instance" "bastion" {
@@ -214,9 +209,7 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids = [ "${aws_security_group.bastionsg.id}" ]
   subnet_id = "${aws_subnet.pub.*.id[0]}"
   associate_public_ip_address = true
-  tags {
-    name = "${var.network_name}-bastion"
-  }
+  tags =  "${merge(var.tags, map("Name", join(var.network_name,"-bastion"))}"
 }
 
 resource "aws_security_group" "bastionsg" {
