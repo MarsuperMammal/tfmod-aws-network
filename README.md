@@ -41,7 +41,7 @@ module "vpc" {
   vpc_cidr_block = "10.0.0.0/16"
   priv_subnet_num = "2"
   pub_subnet_num  = "2"
-  subnet_bit = "8"
+  subnet_bit = "10"
   flowlogrole = "${data.terraform_remote_state.acct.flowlogrole}"
   flow_log_traffic_type = "ALL"
   dns_support = true
@@ -54,7 +54,45 @@ module "vpc" {
 
 Idioms
 -----
+### Count iterating over a list
 
+```
+resource "aws_subnet" "pub" {
+  count = "${var.pub_subnet_num}"
+  availability_zone = "${var.azs[count.index]}"
+  ...
+}
+```
+
+```
+If pub_subnet_num = 2, and var.azs = [us-east-1a, us-east-1c, us-east-1d] then;
+aws_subnet.pub.0.availability_zone = us-east-1a
+aws_subnet.pub.1.availability_zone = us-east-1c
+
+If pub_subnet = 4, and var.azs = [us-east-1a, us-east-1c, us-east-1d] then;
+aws_subnet.pub.0.availability_zone = us-east-1a
+aws_subnet.pub.1.availability_zone = us-east-1c
+aws_subnet.pub.2.availability_zone = us-east-1d
+aws_subnet.pub.3.availability_zone = us-east-1a
+```
+
+### CIDR block allocation
+In this example the cidr blocks for subnets are defined by the vpc_cidr_block variable, and the use of the cidrsubnet intepolation syntax.
+
+```
+resource "aws_subnet" "pub" {
+  count = "${var.pub_subnet_num}"
+  cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
+}
+```
+
+```
+If vpc_cidr_block = 172.16.0.0/16, pub_subnet_num = 4 and the desired subnets would have a /26 network mask then;
+aws_subnet.pub.0.cidr_block = 172.16.0.0/26
+aws_subnet.pub.1.cidr_block = 172.16.0.64/26
+aws_subnet.pub.2.cidr_block = 172.16.0.128/26
+aws_subnet.pub.3.cidr_block = 172.16.0.192/26
+```
 
 Outputs
 -----
