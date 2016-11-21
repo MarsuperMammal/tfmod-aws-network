@@ -1,22 +1,21 @@
 variable "azs" { type = "list" }
-variable "bastion_ami" {}
+variable "dns_hostnames" { default = true }
 variable "dns_support" { default = true }
 variable "flow_log_traffic_type" { default = "ALL" }
 variable "flowlogrole" {} # Imported from the tfmod-aws-acct module
-variable "key_name" {}
-variable "my_ip" { default = "" }
 variable "network_name" {}
 variable "priv_subnet_num" {}
 variable "pub_subnet_num" {}
 variable "region" {}
 variable "subnet_bit" {}
-variable "vpc_cidr_block" {}
 variable "tags" { default = "" }
+variable "vpc_cidr_block" {}
+
 
 resource "aws_vpc" "vpc" {
   cidr_block = "${var.vpc_cidr_block}"
   enable_dns_support = "${var.dns_support}"
-  enable_dns_hostnames = true
+  enable_dns_hostnames = "${var.dns_hostnames}"
 }
 
 resource "aws_internet_gateway" "igw" {
@@ -202,36 +201,6 @@ resource "aws_network_acl" "guardrail" {
   tags = "${merge(var.tags, map("Name", join(var.network_name,"-GuardrailNacl"))}"
 }
 
-resource "aws_instance" "bastion" {
-  ami = "${var.bastion_ami}"
-  instance_type = "t2.micro"
-  key_name = "${var.key_name}"
-  vpc_security_group_ids = [ "${aws_security_group.bastionsg.id}" ]
-  subnet_id = "${aws_subnet.pub.*.id[0]}"
-  associate_public_ip_address = true
-  tags =  "${merge(var.tags, map("Name", join(var.network_name,"-bastion"))}"
-}
-
-resource "aws_security_group" "bastionsg" {
-  name = "${var.network_name}-bastionsg"
-  vpc_id = "${aws_vpc.vpc.id}"
-
-  ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
-    cidr_blocks = [ "0.0.0.0/0" ]
-  }
-  egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = [ "0.0.0.0/0" ]
-  }
-}
-
-output "bastion" { value = "${aws_instance.bastion.public_dns}" }
-output "bastionsg" { value = "${aws_security_group.bastionsg.id}" }
 output "pub_subnets" { value = ["${aws_subnet.pub.*.id}"] }
 output "priv_subnets" { value = ["${aws_subnet.priv.*.id}"] }
 output "priv_route_table_ids" { value = ["${aws_route_table.priv.*.id}"] }
