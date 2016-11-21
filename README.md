@@ -54,9 +54,22 @@ module "vpc" {
 
 Idioms
 -----
+### Enriching variables from a Terraform Remote State file
+
+```hcl
+data "terraform_remote_state" "acct" {
+  ...
+}
+
+module "vpc" {
+  flowlogrole = "${data.terraform_remote_state.acct.flowlogrole}"
+  ...
+}
+```
+
 ### Count iterating over a list
 
-```
+```hcl
 resource "aws_subnet" "pub" {
   count = "${var.pub_subnet_num}"
   availability_zone = "${var.azs[count.index]}"
@@ -79,7 +92,7 @@ aws_subnet.pub.3.availability_zone = us-east-1a
 ### CIDR block allocation
 In this example the cidr blocks for subnets are defined by the vpc_cidr_block variable, and the use of the cidrsubnet intepolation syntax.
 
-```
+```hcl
 resource "aws_subnet" "pub" {
   count = "${var.pub_subnet_num}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
@@ -93,6 +106,38 @@ aws_subnet.pub.1.cidr_block = 172.16.0.64/26
 aws_subnet.pub.2.cidr_block = 172.16.0.128/26
 aws_subnet.pub.3.cidr_block = 172.16.0.192/26
 ```
+
+### Setting Module defined tags along with a tagging standard
+Since the addition of map variable types in Terraform 0.7, this pattern has been made possible for setting specific modules tags while using a company wide tagging standard.
+
+```hcl
+variable "tags" { type = "map" }
+variable "network_name" { default = "my_network" }
+
+resource "aws_subnet" "pub" {
+  count = "${var.pub_subnet_num}"
+  tags = "${merge(var.tags, map("Name", join(var.network_name,"-pub-", count.index))}"
+}
+```
+
+```
+Given:
+# terraform.tfvars
+tags = {
+  Owner = "Phil"
+  Cost_Center = "012345"
+}
+
+aws_subnet.pub.0 would have the following tags.
+
+tags {
+  Name = my_network-pub-0
+  Owner = Phil
+  Cost_Center = 012345
+}
+```
+
+
 
 Outputs
 -----
