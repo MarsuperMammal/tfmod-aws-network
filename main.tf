@@ -54,7 +54,6 @@ resource "aws_subnet" "priv" {
   availability_zone = "${var.azs[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index + var.pub_subnet_num)}"
   tags =  "${merge(var.tags, map("Name", join(var.network_name,"-priv-",count.index)))}"
-  }
 }
 
 resource "aws_eip" "nat_gateway" {
