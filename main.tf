@@ -45,7 +45,7 @@ resource "aws_subnet" "pub" {
   vpc_id = "${aws_vpc.vpc.id}"
   availability_zone = "${var.azs[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
-  tags = "${merge(var.tags, map("Name", join(var.network_name,"-pub-", count.index))}"
+  tags = "${merge(var.tags, map("Name", join(var.network_name,"-pub-", count.index)))}"
 }
 
 resource "aws_subnet" "priv" {
@@ -53,7 +53,7 @@ resource "aws_subnet" "priv" {
   vpc_id = "${aws_vpc.vpc.id}"
   availability_zone = "${var.azs[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index+var.pub_subnet_num)}"
-  tags =  "${merge(var.tags, map("Name", join(var.network_name,"-priv-",count.index))}"
+  tags =  "${merge(var.tags, map("Name", join(var.network_name,"-priv-",count.index)))}"
   }
 }
 
