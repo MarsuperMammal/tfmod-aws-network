@@ -197,7 +197,7 @@ resource "aws_network_acl" "guardrail" {
     to_port = 0
   }
 
-  tags = "${merge(var.tags, map("Name", join(var.network_name,"-GuardrailNacl"))}"
+  tags = "${merge(var.tags, map("Name", join(var.network_name,"-GuardrailNacl")))}"
 }
 
 output "pub_subnets" { value = ["${aws_subnet.pub.*.id}"] }
