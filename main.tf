@@ -52,7 +52,7 @@ resource "aws_subnet" "priv" {
   count = "${length(var.priv_subnet_num)}"
   vpc_id = "${aws_vpc.vpc.id}"
   availability_zone = "${var.azs[count.index]}"
-  cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index+var.pub_subnet_num)}"
+  cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index + var.pub_subnet_num)}"
   tags =  "${merge(var.tags, map("Name", join(var.network_name,"-priv-",count.index)))}"
   }
 }
