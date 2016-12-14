@@ -143,7 +143,7 @@ Outputs
 -----
 
  - `priv_subnets` - list of private subnet ids
- - `pub_subnets` - list of public route table ids
+ - `pub_subnets` - list of public subnet
  - `priv_route_table_ids` - list of private route table ids
  - `vpc_id` - VPC id
 
