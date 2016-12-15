@@ -3,6 +3,7 @@ variable "dns_hostnames" { default = true }
 variable "dns_support" { default = true }
 variable "flow_log_traffic_type" { default = "ALL" }
 variable "flowlogrole" {} # Imported from the tfmod-aws-acct module
+variable "map_public_ip_on_launch" {}
 variable "network_name" {}
 variable "priv_subnet_num" {}
 variable "pub_subnet_num" {}
@@ -43,6 +44,7 @@ resource "aws_vpc_endpoint" "s3e" {
 resource "aws_subnet" "pub" {
   count = "${var.pub_subnet_num}"
   vpc_id = "${aws_vpc.vpc.id}"
+  map_public_ip_on_launch = "${var.map_public_ip_on_launch}"
   availability_zone = "${var.azs[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
  }
