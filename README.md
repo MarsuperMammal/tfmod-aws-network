@@ -7,14 +7,11 @@ A terraform module to provide a VPC in AWS.
 Module Input Variables
 ----------------------
 
-- `azs` - list of AZs in which to distribute subnets
 - `dns_hostnames` - should be true if you want to use private DNS within the VPC
 - `dns_support` - should be true if you want to use private DNS within the VPC
 - `flow_log_traffic_type` - VPC Flow Log traffic type
 - `flowlogrole` - IAM role for VPC Flow Logs
 - `network_name` - vpc name
-- `pub_subnet_num` - list of public subnet cidrs
-- `priv_subnet_num` - list of private subnet cidrs
 - `region` - AWS Region
 - `subnet_bit` - bit offset for subnet size
 - `tags` - Map variable for standard tags
@@ -71,22 +68,10 @@ module "vpc" {
 
 ```hcl
 resource "aws_subnet" "pub" {
-  count = "${var.pub_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   availability_zone = "${var.azs[count.index]}"
   ...
 }
-```
-
-```
-If pub_subnet_num = 2, and var.azs = [us-east-1a, us-east-1c, us-east-1d] then;
-aws_subnet.pub.0.availability_zone = us-east-1a
-aws_subnet.pub.1.availability_zone = us-east-1c
-
-If pub_subnet = 4, and var.azs = [us-east-1a, us-east-1c, us-east-1d] then;
-aws_subnet.pub.0.availability_zone = us-east-1a
-aws_subnet.pub.1.availability_zone = us-east-1c
-aws_subnet.pub.2.availability_zone = us-east-1d
-aws_subnet.pub.3.availability_zone = us-east-1a
 ```
 
 ### CIDR block allocation
@@ -94,7 +79,7 @@ In this example the cidr blocks for subnets are defined by the vpc_cidr_block va
 
 ```hcl
 resource "aws_subnet" "pub" {
-  count = "${var.pub_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
 }
 ```
@@ -115,7 +100,7 @@ variable "tags" { type = "map" }
 variable "network_name" { default = "my_network" }
 
 resource "aws_subnet" "pub" {
-  count = "${var.pub_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   tags = "${merge(var.tags, map("Name", join(var.network_name,"-pub-", count.index))}"
 }
 ```
