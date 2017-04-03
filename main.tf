@@ -1,17 +1,4 @@
-variable "azs" { type = "list" }
-variable "dns_hostnames" { default = true }
-variable "dns_support" { default = true }
-variable "flow_log_traffic_type" { default = "ALL" }
-variable "flowlogrole" {} # Imported from the tfmod-aws-acct module
-variable "map_public_ip_on_launch" {}
-variable "network_name" {}
-variable "priv_subnet_num" {}
-variable "pub_subnet_num" {}
-variable "region" {}
-variable "subnet_bit" {}
-variable "tags" { default = "" }
-variable "vpc_cidr_block" {}
-
+data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "vpc" {
   cidr_block = "${var.vpc_cidr_block}"
@@ -42,27 +29,27 @@ resource "aws_vpc_endpoint" "s3e" {
 }
 
 resource "aws_subnet" "pub" {
-  count = "${var.pub_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   vpc_id = "${aws_vpc.vpc.id}"
   map_public_ip_on_launch = "${var.map_public_ip_on_launch}"
-  availability_zone = "${var.azs[count.index]}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
  }
 
 resource "aws_subnet" "priv" {
-  count = "${var.priv_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   vpc_id = "${aws_vpc.vpc.id}"
-  availability_zone = "${var.azs[count.index]}"
-  cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index + var.pub_subnet_num)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index + length(data.aws_availability_zones.available.names))}"
 }
 
 resource "aws_eip" "nat_gateway" {
-  count = "${var.pub_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   vpc = true
 }
 
 resource "aws_nat_gateway" "gateway" {
-  count = "${var.pub_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   allocation_id = "${aws_eip.nat_gateway.*.id[count.index]}"
   subnet_id = "${aws_subnet.pub.*.id[count.index]}"
 }
@@ -76,7 +63,7 @@ resource "aws_route_table" "pub" {
 }
 
 resource "aws_route_table" "priv" {
-  count = "${var.priv_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   vpc_id = "${aws_vpc.vpc.id}"
   route {
     cidr_block = "0.0.0.0/0"
@@ -85,13 +72,13 @@ resource "aws_route_table" "priv" {
 }
 
 resource "aws_route_table_association" "pub" {
-  count = "${var.pub_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   subnet_id = "${aws_subnet.pub.*.id[count.index]}"
   route_table_id = "${aws_route_table.pub.id}"
 }
 
 resource "aws_route_table_association" "priv" {
-  count = "${var.priv_subnet_num}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   subnet_id = "${aws_subnet.priv.*.id[count.index]}"
   route_table_id = "${aws_route_table.priv.*.id[count.index]}"
 }
@@ -197,8 +184,3 @@ resource "aws_network_acl" "guardrail" {
     to_port = 0
   }
 }
-
-output "pub_subnets" { value = ["${aws_subnet.pub.*.id}"] }
-output "priv_subnets" { value = ["${aws_subnet.priv.*.id}"] }
-output "priv_route_table_ids" { value = ["${aws_route_table.priv.*.id}"] }
-output "vpc_id" { value = "${aws_vpc.vpc.id}" }
