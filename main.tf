@@ -22,14 +22,14 @@ resource "aws_subnet" "pub" {
   count = "${length(data.aws_availability_zones.available.names)}"
   vpc_id = "${aws_vpc.vpc.id}"
   map_public_ip_on_launch = "${var.map_public_ip_on_launch}"
-  availability_zone = "${sort(data.aws_availability_zones.available.names)[count.index]}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
 }
 
 resource "aws_subnet" "priv" {
   count = "${length(data.aws_availability_zones.available.names)}"
   vpc_id = "${aws_vpc.vpc.id}"
-  availability_zone = "${sort(data.aws_availability_zones.available.names)[count.index]}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index + length(data.aws_availability_zones.available.names))}"
 }
 
