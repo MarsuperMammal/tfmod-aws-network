@@ -92,6 +92,18 @@ resource "aws_security_group" "bastion_sg" {
   }
 }
 
+resource "aws_security_group" "bastion_mgmt" {
+  name = "bastion_mgmt"
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "TCP"
+    self = true
+  }
+}
+
 resource "aws_instance" "bastion" {
   count = "${var.enable_bastion == "true" ? 1 : 0 }"
 

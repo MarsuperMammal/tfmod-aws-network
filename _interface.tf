@@ -14,6 +14,7 @@ variable "bastion_instance_type" { default = "t2.micro" }
 variable "my_ip" {}
 
 output "bastion" { value = "${coalesce(aws_instance.bastion.public_dns, "No Bastion Provisioned")}"}
+output "bastion_mgmt_sg" { value = "${aws_security_group.bastion_mgmt.id}"}
 output "priv_subnets" { value = ["${aws_subnet.priv.*.id}"] }
 output "pub_subnets" { value = ["${aws_subnet.pub.*.id}"] }
 output "vpc_id" { value = "${aws_vpc.vpc.id}" }
