@@ -12,18 +12,6 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = "${aws_vpc.vpc.id}"
 }
 
-resource "aws_cloudwatch_log_group" "log_group" {
-  name = "${var.network_name}-aws_vpc_log_group"
-}
-
-resource "aws_flow_log" "flow_log" {
-  log_group_name = "${aws_cloudwatch_log_group.log_group.name}"
-  iam_role_arn = "${var.flowlogrole}"
-  vpc_id = "${aws_vpc.vpc.id}"
-  traffic_type = "${var.flow_log_traffic_type}"
-  depends_on = ["aws_cloudwatch_log_group.log_group"]
-}
-
 resource "aws_vpc_endpoint" "s3e" {
   vpc_id = "${aws_vpc.vpc.id}"
   route_table_ids = ["${aws_route_table.priv.*.id}", "${aws_route_table.pub.id}"]
@@ -86,6 +74,7 @@ resource "aws_route_table_association" "priv" {
 }
 
 resource "aws_network_acl" "guardrail" {
+  count = "${var.enable_guardrail_nacl == true ? 1 : 0 }"
   vpc_id = "${aws_vpc.vpc.id}"
   subnet_ids = [ "${aws_subnet.pub.*.id}", "${aws_subnet.priv.*.id}" ]
   egress {

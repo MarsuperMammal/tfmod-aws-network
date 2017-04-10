@@ -9,8 +9,7 @@ Module Input Variables
 
 - `dns_hostnames` - should be true if you want to use private DNS within the VPC
 - `dns_support` - should be true if you want to use private DNS within the VPC
-- `flow_log_traffic_type` - VPC Flow Log traffic type
-- `flowlogrole` - IAM role for VPC Flow Logs
+- `enable_guardrail_nacl` - feature flag variable for including a best practices nacl
 - `network_name` - vpc name
 - `region` - AWS Region
 - `subnet_bit` - bit offset for subnet size
@@ -51,19 +50,6 @@ module "vpc" {
 
 Idioms
 -----
-### Enriching variables from a Terraform Remote State file
-
-```hcl
-data "terraform_remote_state" "acct" {
-  ...
-}
-
-module "vpc" {
-  flowlogrole = "${data.terraform_remote_state.acct.flowlogrole}"
-  ...
-}
-```
-
 ### Count iterating over a list
 
 ```hcl
@@ -129,7 +115,6 @@ Outputs
 
  - `priv_subnets` - list of private subnet ids
  - `pub_subnets` - list of public subnet
- - `priv_route_table_ids` - list of private route table ids
  - `vpc_id` - VPC id
 
 Author
