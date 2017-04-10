@@ -93,7 +93,7 @@ resource "aws_security_group" "bastion_sg" {
 }
 
 resource "aws_instance" "bastion" {
-  count = "${var.enable_bastion == true ? 1 : 0 }"
+  count = "${var.enable_bastion == "true" ? 1 : 0 }"
 
   ami           = "${var.bastion_ami}"
   instance_type = "${var.bastion_instance_type}"

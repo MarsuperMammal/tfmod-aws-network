@@ -7,7 +7,7 @@ variable "subnet_bit" {}
 variable "tags" { default = "" }
 variable "vpc_cidr_block" {}
 variable "enable_guardrail_nacl" { default = true }
-variable "enable_bastion" { default = true }
+variable "enable_bastion" { default = "true" }
 variable "key_name" {}
 variable "bastion_ami" {}
 variable "bastion_instance_type" { default = "t2.micro" }
