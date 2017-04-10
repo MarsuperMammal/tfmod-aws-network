@@ -121,8 +121,3 @@ Author
 =======
 
 Originally created and maintained by [Phil Watts](https://github.com/)
-
-License
-=======
-
-Apache 2 Licensed. See LICENSE for full details.
