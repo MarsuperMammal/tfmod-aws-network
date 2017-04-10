@@ -73,6 +73,40 @@ resource "aws_route_table_association" "priv" {
   route_table_id = "${aws_route_table.priv.*.id[count.index]}"
 }
 
+resource "aws_security_group" "bastion_sg" {
+  name = "bastion_sg"
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "TCP"
+    cidr_blocks = ["${var.my_ip}"]
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "bastion" {
+  count = "${var.enable_bastion == true ? 1 : 0 }"
+
+  ami           = "${var.bastion_ami}"
+  instance_type = "${var.bastion_instance_type}"
+  key_name      = "${var.key_name}"
+  subnet_id     = "${aws_subnet.pub.id[0]}"
+
+  vpc_security_group_ids = ["${aws_security_group.bastion_sg.id}"]
+
+  tags {
+    Name = "${var.network_name}-bastion"
+  }
+}
+
 resource "aws_network_acl" "guardrail" {
   count = "${var.enable_guardrail_nacl == true ? 1 : 0 }"
   vpc_id = "${aws_vpc.vpc.id}"
