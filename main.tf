@@ -24,7 +24,7 @@ resource "aws_subnet" "pub" {
   map_public_ip_on_launch = "${var.map_public_ip_on_launch}"
   availability_zone = "${sort(data.aws_availability_zones.available.names)[count.index]}"
   cidr_block = "${cidrsubnet(var.vpc_cidr_block, var.subnet_bit, count.index)}"
- }
+}
 
 resource "aws_subnet" "priv" {
   count = "${length(data.aws_availability_zones.available.names)}"
